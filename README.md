@@ -3,10 +3,12 @@ Cassini ISS CALibration (CISSCAL)
 
 [![CICLOPS](https://img.shields.io/badge/Website-CICLOPS-blue.svg)][ciclops]
 [![Data](https://img.shields.io/badge/Data-PDS-blue.svg)][pds]
+[![User Guide](https://img.shields.io/badge/User%20guide-PDF-green.svg)][user_guide]
 [![Last release](https://img.shields.io/github/release/seignovert/cisscal.svg)][last-release]
 
 [ciclops]: ciclops.org/sci/cisscal.php
 [pds]: https://pds-imaging.jpl.nasa.gov/data/cassini/cassini_orbiter/coiss_0011_v4.1/
+[user_guide]: document/ISS_Data_User_Guide_180916.pdf
 [last-release]: https://github.com/seignovert/cisscal/releases/latest
 
 __This repository is a clone of the latest version of [CISSCAL][ciclops] published on the [PDS][pds]. It is provided _as is_ without any warranty.__
@@ -16,13 +18,13 @@ __This repository is a clone of the latest version of [CISSCAL][ciclops] publish
 CISSCAL is the Cassini ISS image calibration software package. For more
 information, including detailed setup instructions, please see Section 4.4
 of the ISS Data User's Guide, available in the `document/` directory of the
-ISS Calibration Volume (COISS_0011 version 4.1) or at the following [URL][user_guide]:
+ISS Calibration Volume ([COISS_0011 version 4.1][pds]) or at the following [URL][user_guide_url]:
+
+[user_guide]: http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
 
 ```
 http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
 ```
-
-[user_guide]: http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
 
 Additionally, see `src/make_polar_image_readme.txt` for information regarding 
 polarization calibration using the standalone code `make_polar_image.pro`. 
