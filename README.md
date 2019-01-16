@@ -11,7 +11,8 @@ Cassini ISS CALibration (CISSCAL)
 [user_guide]: document/ISS_Data_User_Guide_180916.pdf
 [last-release]: https://github.com/seignovert/cisscal/releases/latest
 
-__This repository is a clone of the latest version of [CISSCAL][ciclops] published on the [PDS][pds]. It is provided _as is_ without any warranty.__
+> This repository is a clone of the latest version of [CISSCAL][ciclops] published on the [PDS][pds].
+> It is provided _as is_ without any warranty.
 
 ---
 
