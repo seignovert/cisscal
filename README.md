@@ -8,7 +8,7 @@ Cassini ISS CALibration (CISSCAL)
 
 [ciclops]: ciclops.org/sci/cisscal.php
 [pds]: https://pds-imaging.jpl.nasa.gov/data/cassini/cassini_orbiter/coiss_0011_v4.1/
-[user_guide]: docs/ISS_Data_User_Guide_180916.pdf
+[user_guide]: docs/iss_data_user_guide_180916.pdf
 [last-release]: https://github.com/seignovert/cisscal/releases/latest
 
 > This repository is a clone of the latest version of [CISSCAL][ciclops] published on the [PDS][pds].
