@@ -8,7 +8,7 @@ Cassini ISS CALibration (CISSCAL)
 
 [ciclops]: ciclops.org/sci/cisscal.php
 [pds]: https://pds-imaging.jpl.nasa.gov/data/cassini/cassini_orbiter/coiss_0011_v4.2/
-[user_guide]: docs/iss_data_user_guide_180916.pdf
+[user_guide]: https://pds-imaging.jpl.nasa.gov/documentation/iss_data_user_guide_180916.pdf
 [last-release]: https://github.com/seignovert/cisscal/releases/latest
 
 > This repository is a clone of the latest version of [CISSCAL][ciclops] published on the [PDS][pds].
@@ -19,9 +19,7 @@ Cassini ISS CALibration (CISSCAL)
 CISSCAL is the Cassini ISS image calibration software package. For more
 information, including detailed setup instructions, please see Section 4.4
 of the ISS Data User's Guide, available in the `document/` directory of the
-ISS Calibration Volume ([COISS_0011 version 4.2][pds]) or at the following [URL][user_guide_url]:
-
-[user_guide]: https://pds-imaging.jpl.nasa.gov/documentation/iss_data_user_guide_180916.pdf
+ISS Calibration Volume ([COISS_0011 version 4.2][pds]) or at the following [URL][user_guide]:
 
 ```
 https://pds-imaging.jpl.nasa.gov/documentation/iss_data_user_guide_180916.pdf
