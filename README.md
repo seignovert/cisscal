@@ -21,10 +21,10 @@ information, including detailed setup instructions, please see Section 4.4
 of the ISS Data User's Guide, available in the `document/` directory of the
 ISS Calibration Volume ([COISS_0011 version 4.2][pds]) or at the following [URL][user_guide_url]:
 
-[user_guide]: http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
+[user_guide]: https://pds-imaging.jpl.nasa.gov/documentation/iss_data_user_guide_180916.pdf
 
 ```
-http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
+https://pds-imaging.jpl.nasa.gov/documentation/iss_data_user_guide_180916.pdf
 ```
 
 Additionally, see `src/make_polar_image_readme.txt` for information regarding
