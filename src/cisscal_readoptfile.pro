@@ -4,6 +4,7 @@
 ;     incorporated into GUI
 ;   - Update (BDK, 12/6/17): improved parsing code, fixed various anomalies
 ;   - Update (BDK, 6/20/18): Remove sens vs. time Vega-only option
+;   - Update (BDK, 4/1/19): Change flux='OFF' to also turn off abs. correction
 
 function cisscal_readoptfile,filename,default=default,nimages=nimages,bias=bias,flux=flux,geom=geom,im_threshold=im_threshold,im_pixrange=im_pixrange,spec=spec,mask=mask,suffixes=suffixes,bmode=bmode,hotpix=hotpix
 
@@ -96,30 +97,31 @@ if not keyword_set(default) then begin
         
 ;   bias subtraction (Y or N)        
       if values[2] eq 'Y' then begin
-         (*(optsarr[i]).bias).onoff = 1l 
+         (*(optsarr[i]).bias).onoff = 1l
+
+;   bias subtraction type (BSM or OC or IM)
+         bmode = 1
+         if values[3] eq 'BSM' then begin
+            (*(optsarr[i]).bias).biasstripmean = 1l 
+            (*(optsarr[i]).twohz).onoff = 0l
+            bmode = 0
+         endif else if values[3] eq 'OC' then begin
+            (*(optsarr[i]).bias).biasstripmean = 0l 
+            (*(optsarr[i]).twohz).onoff = 1l
+            (*(*(optsarr[i]).twohz).imagemean).onoff = 0l
+            bmode = 1
+         endif else if values[3] eq 'IM' then begin
+            (*(optsarr[i]).bias).biasstripmean = 1l
+            (*(optsarr[i]).twohz).onoff = 1l
+            (*(*(optsarr[i]).twohz).imagemean).onoff = 1l
+            bmode = 2
+         endif
+         
       endif else begin
          (*(optsarr[i]).bias).onoff = 0l
          (*(optsarr[i]).twohz).onoff = 0l
       endelse
       
-;   bias subtraction type (BSM or OC or IM)
-      bmode = 1
-      if values[3] eq 'BSM' then begin
-         (*(optsarr[i]).bias).biasstripmean = 1l 
-         (*(optsarr[i]).twohz).onoff = 0l
-         bmode = 0
-      endif else if values[3] eq 'OC' then begin
-         (*(optsarr[i]).bias).biasstripmean = 0l 
-         (*(optsarr[i]).twohz).onoff = 1l
-         (*(*(optsarr[i]).twohz).imagemean).onoff = 0l
-         bmode = 1
-      endif else if values[3] eq 'IM' then begin
-         (*(optsarr[i]).bias).biasstripmean = 1l
-         (*(optsarr[i]).twohz).onoff = 1l
-         (*(*(optsarr[i]).twohz).imagemean).onoff = 1l
-         bmode = 2
-      endif
-        
 ;      maskfile (auto if not set)     
       if values[4] ne '' then (*(*(optsarr[i]).twohz).imagemean).maskfile = values[4]
 
@@ -255,9 +257,16 @@ for i=0,nfiles-1 do begin
     if keyword_set(geom) then (*(optsarr[i]).geom).onoff = 1l
 
     if keyword_set(flux) then begin
-        if flux eq 'I' then (*(*(optsarr[i]).flux).ioverf).onoff = 0l else if $
-          flux eq 'IOF' then (*(*(optsarr[i]).flux).ioverf).onoff = 1l else if $
-          flux eq 'OFF' then (*(optsarr[i]).flux).onoff = 0l
+       if flux eq 'I' then begin
+          (*(optsarr[i]).flux).onoff = 1l
+          (*(*(optsarr[i]).flux).ioverf).onoff = 0l
+       endif else if flux eq 'IOF' then begin
+          (*(optsarr[i]).flux).onoff = 1l
+          (*(*(optsarr[i]).flux).ioverf).onoff = 1l
+       endif else if flux eq 'OFF' then begin
+          (*(optsarr[i]).flux).onoff = 0l
+          (*(optsarr[i]).corr).onoff = 0l          
+       endif
     endif 
 
     if keyword_set(spec) then begin

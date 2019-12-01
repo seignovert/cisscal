@@ -372,7 +372,6 @@ PRO CassImg::SubtractDark
 @cisscal_common.pro	; include COMMON definitions
 
 IF DebugFlag GT 0 THEN BEGIN
-;   CISSCAL_Log
    CISSCAL_Log,'Subtracting dark:'
 ENDIF
 
@@ -618,7 +617,7 @@ junk=self.Labels->Set('DARK_CURRENT_CORRECTION_TYPE',dark_message,1,/new)
 if dparamfile ne '' then $
    junk=self.Labels->Set('DARK_CURRENT_PARAM_FILE',dparamfile,1,/new)
 
-If DebugFlag gt 0 THEN CISSCAL_Log,' ',dark_message
+If DebugFlag gt 0 THEN CISSCAL_Log,'  ',dark_message
 
   IF DebugFlag eq 2 THEN begin
       CISSCAL_Log, '  DN Extrema after dark subtraction', self->DNRange()

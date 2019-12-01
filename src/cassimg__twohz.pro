@@ -161,6 +161,10 @@ PRO CassImg::TwoHz
 
 @cisscal_common.pro	; include COMMON definitions
 
+; Don't attempt to subtract 2 hz noise if LUT, gain state lower
+; than 3 (12 e-/DN). Note: user already alerted by debias code.
+If self.ConvType EQ 'TABLE' and self.GainState LT 3 THEN RETURN
+  
 in_image=*self.ImageP
 
 ; define missing pixels array:
@@ -179,7 +183,7 @@ IF sum NE 'FULL' then begin
           CISSCAL_Log,'  2 Hz removal not optimized for summed images; skipped'
     ENDIF
     RETURN
-ENDIF
+ ENDIF
 
 ; overclock method:
 

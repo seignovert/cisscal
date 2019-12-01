@@ -7,7 +7,7 @@ Cassini ISS CALibration (CISSCAL)
 [![Last release](https://img.shields.io/github/release/seignovert/cisscal.svg)][last-release]
 
 [ciclops]: ciclops.org/sci/cisscal.php
-[pds]: https://pds-imaging.jpl.nasa.gov/data/cassini/cassini_orbiter/coiss_0011_v4.1/
+[pds]: https://pds-imaging.jpl.nasa.gov/data/cassini/cassini_orbiter/coiss_0011_v4.2/
 [user_guide]: docs/iss_data_user_guide_180916.pdf
 [last-release]: https://github.com/seignovert/cisscal/releases/latest
 
@@ -19,7 +19,7 @@ Cassini ISS CALibration (CISSCAL)
 CISSCAL is the Cassini ISS image calibration software package. For more
 information, including detailed setup instructions, please see Section 4.4
 of the ISS Data User's Guide, available in the `document/` directory of the
-ISS Calibration Volume ([COISS_0011 version 4.1][pds]) or at the following [URL][user_guide_url]:
+ISS Calibration Volume ([COISS_0011 version 4.2][pds]) or at the following [URL][user_guide_url]:
 
 [user_guide]: http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
 
@@ -27,19 +27,17 @@ ISS Calibration Volume ([COISS_0011 version 4.1][pds]) or at the following [URL]
 http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
 ```
 
-Additionally, see `src/make_polar_image_readme.txt` for information regarding 
-polarization calibration using the standalone code `make_polar_image.pro`. 
+Additionally, see `src/make_polar_image_readme.txt` for information regarding
+polarization calibration using the standalone code `make_polar_image.pro`.
 
 Note that when downloaded from the PDS, the CISSCAL software will be found in
 the `extras/cisscal/` directory, and the calibration support files will be
-found in the `calib/` directory. The user may wish to rename these to
-`cisscal3_9_1` and `support3_9`, respectively, to maintain version control, but
-this is not strictly necessary. 
+found in the `calib/` directory.
 
 CISSCAL is written in Interactive Data Language (`IDL`), and must be run on a
-computer on which IDL has been installed. As of this writing, CISSCAL has 
-been tested for compatibility with IDL versions `5.5` through `8.2`. In addition, 
-the following system variables must be set (typically in user's `.cshrc` file 
+computer on which IDL has been installed. As of this writing, CISSCAL has
+been tested for compatibility with IDL versions `5.5` through `8.2`. In addition,
+the following system variables must be set (typically in user's `.cshrc` file
 or equivalent) for CISSCAL to work properly:
 
 - `CisscalDir`, directory containing CISSCAL code:
@@ -68,9 +66,9 @@ Robert West of JPL. The systems design for the CISSCAL software, and its
 original implementation and development, was the work of Dr. Kevin Beurle at
 Queen Mary, University of London from August 1998 through March 2002.
 Beginning in April 2002, major design and algorithmic modifications, software
-additions, debugging and maintenance have been performed by Benjamin Knowles
-of CICLOPS/Space Science Institute, Boulder, CO under the direct supervision
-of West.  Significant contributions (algorithms, software, evaluation and
+additions, debugging and maintenance have been performed by Ben Knowles of
+CICLOPS/Space Science Institute, Boulder, CO under the direct supervision of
+West.  Significant contributions (algorithms, software, evaluation and
 validation, etc.) have been made by West, Vance Haemmerle of JPL (while at
 CICLOPS), Daren Wilson of CICLOPS, and other members of the Cassini ISS Team.
 

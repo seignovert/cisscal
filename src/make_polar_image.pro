@@ -2,46 +2,52 @@
 ; make_polar_image.pro
 ;---------------------
 ;
-; This function ingests registered or unregistered, calibrated,
-; polarized images from the Cassini ISS cameras. Input images must be
-; in VICAR format, and specified in sets of two or three, with filters 
-; consisting of either: 
-;   1) P0, P60 and P120
-;   2) IRP0 and IRP90
-;   3) CLR and IRP0
-; with matching colors in the opposite filter position. The order of input
-; images is irrelevant, only that they constitute a matching set.
+;Prior to using make_polar_image the user should be familiar with the
+;expected uncertainty in the final product by consulting the ISS final
+;calibration report submitted to a professional journal in 2019
+;(Knowles first author).
 ;
-; The code includes the transmissions parallel and perpendicular to
-; the polarizing axis of the polarizer, derived from observations.
-; These are functions of wavelength, and different passbands have
-; different effective parallel and perpendicular transmissions. 
+;This function ingests registered or unregistered, calibrated,
+;polarized images from the Cassini ISS cameras. Input images must be
+;in VICAR format, and specified in sets of two or three, with filters 
+;consisting of either: 
+;   1) P0, P60 and P120 (NAC)
+;   2) IRP0 and IRP90 (WAC)
+;   3) CLR and IRP0 (NAC and WAC)
+;with matching colors (except for CLR) in the opposite filter
+;position. The order of input images is irrelevant, only that they
+;constitute a matching set. The input images must be taken close
+;together in time because any variation in image scale or orientation
+;will produce errors. Variation among the images in the line, sample
+;location of the target can be corrected with the align option. 
 ;
-; As of November 2014, the following filter combinations are supported:
+;The code includes the transmissions parallel and perpendicular to
+;the polarizing axis of the polarizer, derived from observations.
+;These are functions of wavelength, and different passbands have
+;different effective parallel and perpendicular transmissions. 
 ;
-;   WAC IRP0/CLR or IRP0/IRP90 + MT2, CB2, MT3, CB3
-;   (NAC currently uses WAC values for these filters)
-;   
-;   NAC P0/P60/P120 + UV3, BL2, GRN, MT1, CB1, MT2, CB2
+;As of June 2019, all filter/polarizer combinations are supported
+;except for those with the CLR filter in the opposite filter wheel.
 ;
-; The returned value is a structure defined as follows:
+;The returned value is a structure defined as follows:
 ; 
-; If input is two file names (files containing either [IRP0, IRP90] or
-; [IRP0, CLR]) the function returns intensity I (same units as the
-; original, and indicated by the tag name "intensity") and the Stokes
-; parameter Q defined with respect to IRP0 (tag name: "Q").
+;If input is two file names (files containing either [IRP0, IRP90] or
+;[IRP0, CLR]) the function returns intensity I (same units as the
+;original, and indicated by the tag name "intensity") and the Stokes
+;parameter Q/I (range -1 to +1) defined with respect to the direction
+;of the principal axis of IRP0 (tag name: "Q").
 ;
-; If input is three files (containing P0, P60, P120) the returned
-; structure contains intensity, polarization (from 0.0 to 1.0; tag
-; name: "polarization"), and theta, the angle of the electric vector
-; relative to the camera Y axis (+/- 90 degrees; tag name: "theta").
+;If input is three files (containing P0, P60, P120) the returned
+;structure contains intensity, polarization (from 0.0 to 1.0 tag
+;name: "polarization"), and theta, the angle of the electric vector
+;relative to the camera Y axis (+/- 90 degrees tag name: "theta").
 ;
-; For more information on the polarization code implementation, see the ISS
-; Data User's Guide, the latest version of which can be obtained at:
+;For more information on the polarization code implementation, see the ISS
+;Data User's Guide, the latest version of which can be obtained at:
 ;
 ;   http://pds-imaging.jpl.nasa.gov/software/
 ;
-; Keywords:
+;Keywords:
 ;
 ;  Set the /align keyword to co-register the images if they have
 ;   not already been co-registered.
@@ -53,13 +59,12 @@
 ;   file containing the calculated intensity. This file will be given
 ;   the same label as file1 to track calibration history.
 ;
-; Invoking the program:
+;Invoking the program:
 ;
 ;  result = make_polar_image(file1,file2,[file3],[/align],[/flip],$
 ;          [outfile=outfile],[silent=silent])
 ;
-;
-; Written by Bob West
+;Written by Bob West and Ben Knowles
 ;
 ;  version 1.0, May 25, 2001
 ; 
@@ -69,24 +74,30 @@
 ;  version 3.0, January, 2006 - still needs an absolute calibration factor
 ;       for the intensity calculation.
 ;
-;  version 4.0, November 2007, various revisions by Ben Knowles.
+;  version 4.0, November 2007, various revisions by B. Knowles.
 ;
 ;  version 5.0, December 7 2007, converted image input to file input,
 ;       instituted automatic detection of filter, polarizers,
 ;       Vis/IR, created structure output.
 ;
 ;  version 6.0, August 20, 2013, Cleaned up and incorporated into
-;       CISSCAL by Ben Knowles.
+;       CISSCAL by B. Knowles.
 ;
 ;  version 7.0, March 14, 2014, No longer assumes T_parallel and T_perpendiular
-;       are the same for all polarizers; updates T_parallel and T_perpendicular
+;       are the same for all polarizersupdates T_parallel and T_perpendicular
 ;       based on POLCAL calibration results for some filters.  New
 ;       algorithm by R. West.
 ;
 ;  version 8.0, April 23, 2014, Improved error handling and cleaned up
-;       for CISSCAL 3.7 by Ben Knowles.
+;       for CISSCAL 3.7 by B. Knowles.
 ;
-;  version 9.0, November 20, 2014, Additional small bug fixes by B. Knowles.
+;  version 9.0, November 20, 2014, Additional small bug fixes by
+;       B. Knowles.
+;
+;  version 10.0, June 25, 2019, Added remaining filters in opposite
+;       filter wheels and revised transmission constants by R. West.
+;
+;  version 11.0, June 28, 2019, various cleanup by B. Knowles.
 
 
 pro mpi_calc_ipt,I0,I60,I120,T1,T2,d,I,Pol,Theta
@@ -542,9 +553,45 @@ end
 ;==============================================================================================
 
 
-function make_polar_image,file1,file2,file3,align=align,flip=flip,outfile=outfile,silent=silent
+function make_polar_image,file1,file2,file3,align=align,flip=flip,outfile=outfile,silent=silent,debug=debug
 
 ; See description, usage, and version history at top of file.
+
+if n_params() lt 2 then begin
+
+print,'make_polar_image.pro'
+print,'--------------------'
+print,''
+print,'This function ingests registered or unregistered, calibrated,'
+print,'polarized images from the Cassini ISS cameras. Input images must be'
+print,'in VICAR format, and specified in sets of two or three, with filters'
+print,'consisting of either:'
+print,'   1) P0, P60 and P120 (NAC)'
+print,'   2) IRP0 and IRP90 (WAC)'
+print,'   3) CLR and IRP0 (NAC and WAC)'
+print,'with matching colors (except for CLR) in the opposite filter'
+print,'position. The order of input images is irrelevant, only that they'
+print,'constitute a matching set.'
+print,''
+print,'Invoking the program:'
+print,''
+print,'  result = make_polar_image(file1,file2,[file3],[/align],[/flip],$'
+print,'          [outfile=outfile],[silent=silent])'
+print,''
+print,'  Set the /align keyword to co-register the images if they have'
+print,'   not already been co-registered.'
+print,'  Set the /flip keyword to flip the output arrays about the x'
+print,'   (sample) axis'
+print,'  Set the /silent keyword to suppress warning and info messages (but'
+print,'   not error messages).'
+print,'  Set the outfile keyword equal to the filename of a VICAR-format'
+print,'   file containing the calculated intensity. This file will be given'
+print,'   the same label as file1 to track calibration history.'
+print,''
+print,'See make_polar_image_readme.txt for more information.'
+return,-1
+
+endif
   
 ; initialize cisscal variables:
 @cisscal_common.pro
@@ -586,8 +633,8 @@ ImgObj2->ReadVic, file2
 data2 = ImgObj2->Image()
 label2 = ImgObj2->LabelText()
 
-x = strpos(label1,'CISSCAL')
-cisscal_version = float(strmid(label1,x+8,3))
+vpos = strpos(label1,'CISSCAL')
+cisscal_version = float(strmid(label1,vpos+8,3))
 
 t = ''''
 
@@ -624,8 +671,8 @@ if p eq 2 then begin
    endif
 
    if camera eq 'ISSNA' then begin
-      if not keyword_set(silent) then $
-         print, 'WARNING: NAC IRP0 is not yet calibrated.  Using WAC Transmission values!!!'
+;      if not keyword_set(silent) then $
+;         print, 'WARNING: NAC IRP0 is not yet calibrated.  Using WAC Transmission values!!!'
       filter = strmid(larray(z),p0index(z)+8,3)
    endif else begin
       filter = strmid(larray(z),p0index(z)-5,3)
@@ -661,64 +708,133 @@ if p eq 2 then begin
    endif
 
   ; transmissions for IRP0:
+   f = 1.0
+   delta = 1.0
+
    case filter of
       
       'MT2': begin
-;         t_parallel  =       0.83
-;         t_perp  =    4.78649e-05
-;         cal_factor = 2.21155
-;         t0 = 1.0
-;         t90 = 1.0
-         t10 = 0.932473  &    t20 = 0.0180839
-         t190 = 0.922464 &  t290 =  0.00000
+         
+         case camera of
+            'ISSWA': begin
+               measured_t10_plus_t20 = 0.950293
+               measured_t190_plus_t290 = 0.922205
+               t290 = 0.0
+               t190 = measured_t190_plus_t290
+               t20 = measured_t10_plus_t20 - measured_t190_plus_t290
+               t10 = measured_t10_plus_t20 - t20
+            end
+            
+            'ISSNA': begin               
+               measured_t10_plus_t20 = 0.97247767
+               measured_t190_plus_t290 = 0.922205
+               t290 = 0.0
+               t190 = measured_t190_plus_t290
+               t20 = 0.03
+               t10 = measured_t10_plus_t20 - t20
+            end
+         endcase
       end
       
       'CB2': begin
-;         t_parallel  =       0.909305
-;         t_perp  =    3.95933e-05
-;         cal_factor = 2.2238
-;         t0 = 1.0
-;         t90 = 0.94
-         t10 =      0.980000 &    t20 =     0.0178995
-         t190 =      0.90512  &  t290 =      0.0320017
+         delta = -0.01
+         measured_t10_plus_t20 = 0.974210
+         measured_t190_plus_t290 = 0.936367
+         t290 = 0.0
+         t190 = measured_t190_plus_t290
+         t20 = measured_t10_plus_t20 - measured_t190_plus_t290 + delta
+         t10 = measured_t10_plus_t20 - t20
       end
       
       'MT3': begin
-;         t_parallel  =       0.946314
-;         t_perp  =    6.31029e-05
- ;        cal_factor = 2.11791
-         t10 =      0.946794 &    t20 =     0.0416498 ; Place-holder number pending calibration
-         t190 =      0.966964  &  t290 =     0.00844336 ; Place-holder number pending calibration
-         print, 'WARNING: MT3 polarizers not yet calibrated!!!'
+         delta = -0.020
+         measured_t10_plus_t20 = 1.02065
+         measured_t190_plus_t290 = 0.964200
+         t290 = 0.0
+         t190 = measured_t190_plus_t290
+         t20 = measured_t10_plus_t20 - measured_t190_plus_t290 + delta
+         t10 = measured_t10_plus_t20 - t20         
       end
       
+      'IR1': begin
+         delta = 0.00
+         measured_t10_plus_t20 = 0.97565258
+         measured_t190_plus_t290 = 0.982639
+         t290 = 0.0
+         t190 = measured_t190_plus_t290
+;         t10 = 0.993 & t20 = measured_t10_plus_t20 - t10
+         t20 =  0.02
+         t10 = measured_t10_plus_t20 - t20
+      end
+
+      
+      'IR3': begin
+         
+         case camera of
+            'ISSWA': begin
+               delta = 0.00
+               measured_t10_plus_t20 = 1.00865
+               measured_t190_plus_t290 = 0.982639
+               t290 = 0.0
+               t190 = measured_t190_plus_t290
+;               t10 = 0.993 & t20 = measured_t10_plus_t20 - t10
+               t20 = measured_t10_plus_t20 - measured_t190_plus_t290 + delta
+               t10 = measured_t10_plus_t20 - t20
+            end
+            
+            'ISSNA': begin
+               measured_t10_plus_t20 = 1.02123
+               T20 = 0.03
+               T10 = measured_t10_plus_t20 - T20
+               T190 = T10 & T290 = T20
+            end
+         endcase
+         
+      end
+   
+      'IR4': begin
+         delta = 0.00
+         measured_t10_plus_t20 = 0.990549
+         measured_t190_plus_t290 = 0.989540
+         t290 = 0.0
+         t190 = measured_t190_plus_t290
+;        t10 = 0.993 & t20 = measured_t10_plus_t20 - t10
+         t20 = measured_t10_plus_t20 - measured_t190_plus_t290 + delta
+         t10 = measured_t10_plus_t20 - t20
+      end
+
       'CB3': begin
-;         t_parallel  =       0.956206
-;         t_perp  =    0.000398540
-;;         cal_factor = 2.13846*0.98
-;         cal_factor = 2.09569
-         t10 =      0.946794 &    t20 =     0.0416498
-         t190 =      0.966964  &  t290 =     0.00844336
+         
+         case camera of
+            'ISSWA': Begin      ; WAC
+               delta = -0.005
+               measured_t10_plus_t20 = 0.995187
+               measured_t190_plus_t290 = 0.978361
+               t290 = 0.0
+               t190 = measured_t190_plus_t290
+               t20 = measured_t10_plus_t20 - measured_t190_plus_t290 + delta
+               t10 = measured_t10_plus_t20 - t20
+            end
+            'ISSNA': begin      ; NAC
+               measured_t10_plus_t20 = 1.0166
+               t20 = 0.02
+               t10 = measured_t10_plus_t20 - t20
+               t190 = t10 & t290=T20
+            end
+         endcase
+
       end
       
-;      'MT1': begin
-;         t_parallel  =       0.800691
-;         t_perp  =     0.00135032
-;      end
-;      'CB1': begin
-;         t_parallel  =       0.722038
-;         t_perp  =     0.00117157
-;      end
-;      
-;      'IR3': begin
-;         t_parallel  =       0.954022
-;         t_perp  =    0.000325912
-;      end
-;      
-;      'IR1': begin
-;         t_parallel  =       0.909035
-;         t_perp  =    6.06756e-05
-;      end
+      'IR2': begin
+         delta = -0.000
+         measured_t10_plus_t20 = 1.03207
+         measured_t190_plus_t290 = 0.975589
+         t290 = 0.02
+         t190 = measured_t190_plus_t290 - t290
+;         t20 = measured_t10_plus_t20 - measured_t190_plus_t290 + delta
+         t20 = 0.033
+         t10 = measured_t10_plus_t20 - t20        
+      end
       
       else: begin
          print,'Error: Filter '+filter+' not yet supported by make_polar_image.pro'
@@ -726,16 +842,52 @@ if p eq 2 then begin
       end
       
    endcase
+
+   if keyword_set(debug) then begin   ; Debugging...
+      print,'Enter /DEBUG mode...'
+      print,''
+      print,'Filter ',filter
+   
+      print, 't10 t20 ',t10, t20
+      if camera eq 'ISSWA' then print, 't190 t290 ',t190, t290
+      print,'t10+t20 ',t10+t20
+      if camera eq 'ISSWA' then print,'t190+t290 ',t190+t290
+      r1 = (t10-t20) / (t10+t20)
+      print, 't10-t20 / t10+t20 ',r1
+      if camera eq 'ISSWA' then r2 = (t190-t290) / (t190+t290)
+      if camera eq 'ISSWA' then print,'t190-t290 / t190+t290 ',r2
+      if camera eq 'ISSWA' then r3 = r1/r2
+      if camera eq 'ISSWA' then print,'ratio ',r3
+      print,'f, delta',f,delta
+      tab = string(9b)
       
-   if strpos(label,t+'IRP90'+t) gt 0 then begin ;IRP0 and IRP90
-      case z of
+      if max([t10,t20,t190,t290]) gt 1.0 then begin
+         print,'[t10,t20,t190,t290] = ',[t10,t20,t190,t290],$
+               ' Maxiumum greater than 1 in make_polar_image'
+         stop
+      endif
+      if min([t10,t20,t190,t290]) lt 0.0 then begin
+         print,'[t10,t20,t190,t290] = ',[t10,t20,t190,t290],$
+               ' Minimum greater than 0 in make_polar_image'
+         stop
+      endif
+      
+;      openw,2,'make_polar_image_constants.txt'
+;;      printvals = string(t10,format="(F7.3)") + tab +  string(t20,format="(F7.3)") + tab + $
+;;      string(t190,format="(F7.3)") + tab + string(t290,format="(F7.3)") + tab
+;      printf,2,'Filter ',filter,'t10 t20 t190 t290 ',t10, t20, t190, t290
+;      close,2
+
+      stop
+   endif
+      
+   if strpos(label,t+'IRP90'+t) gt 0 then begin         ;IRP0 and IRP90
+      case z of                                         ;--------------
          0: irp90 = data2
          1: irp90 = data1
       endcase
       p90index = strpos(label,t+'IRP90'+t)
       filter2 = strmid(larray(z),p0index(z)-5,3)
-        ;irp0 = irp0/t0
-        ;irp90 = irp90/t90
          
         ; align images if necesary:   
       if keyword_set(align) then begin
@@ -744,7 +896,7 @@ if p eq 2 then begin
          
          if not keyword_set(silent) then print,'Aligning IR images...'
          
-         mpi_image_offset,irp90,irp0,xoff,yoff,silent=silent
+         mpi_image_offset,irp90,irp0,xoff,yoff;,silent=silent
          irp90 = mpi_image_shift(irp90,xoff,yoff)
 
          if not keyword_set(silent) then begin
@@ -756,17 +908,38 @@ if p eq 2 then begin
          marginy = abs(yoff)      
       endif
          
-;      intensity = (irp0 + irp90) ; old method assumed polarizers have the same transmission values
+;;      intensity = (irp0 + irp90) ; old method assumed polarizers have the same transmission values
+;;
+;      denom = t10*t190 - t20*t290
 ;      
-      denom = t10*t190 - t20*t290
+;      iu = 2.*(irp90*t10 - irp0*t290)/denom                  ; unpolarized component
+;      ip = (irp0*(t190 + t290) - irp90*(t10 + t20))/denom    ; linearly polarized component
+;
+;      intensity = iu + ip
+
+;     6/2019 update by B. West:     
+      x = 0.0 ; replace with cos^2(sunax) if you want Ip.  Otherwise you get q.
+      numerator = 2*(-IRP0*T190 + IRP90*T20 + IRP90*T10*x + IRP0*T190*x - IRP90*T20*x - $
+                     IRP0*T290*x)
+      denom = (T10*T190 - T20*T290)*(-1 + 2*x)
+      iu = numerator/denom
       
-      iu = 2.*(irp90*t10 - irp0*t290)/denom                  ; unpolarized component
-      ip = (irp0*(t190 + t290) - irp90*(t10 + t20))/denom    ; linearly polarized component
+      numerator = -IRP90*T10 + IRP0*T190 - IRP90*T20 + IRP0*T290
+      denom = (T10*T190 - T20*T290)*(-1 + 2*x)
+      ip = numerator/denom
          
-      intensity = iu + ip
+      intensity = (IRP90*(T10 - T20) + IRP0*(T190 - T290))/(T10*T190 - T20*T290)
+
+;     for testing purposes only:
+;      window,/free
+;      plot,irp0, irp90, psym=1
+;      IRP90 = (-IRP0*T190 + intensity*T10*T190 + IRP0*T290 - intensity*T20*T290)/(T10-T20)
+;      IRP90prime = (IRP0*(T290-T190) + intensity*(T10*T190 - T20*T290))/(T10-T20)
+;       stop
+;
          
-   endif else begin             ;IRP0 and CLR
-      case z of
+   endif else begin                                     ;IRP0 and CLR
+      case z of                                         ;------------
          0: intensity = data2
          1: intensity = data1
       endcase
@@ -778,9 +951,14 @@ if p eq 2 then begin
             
          if not keyword_set(silent) then print,'Aligning IR images...'
             
-         mpi_image_offset,intensity,irp0,xoff,yoff,silent=silent
-         intensity = mpi_image_shift(intensity,xoff,yoff)
-            
+;         mpi_image_offset,intensity,irp0,xoff,yoff,silent=silent
+;         intensity = mpi_image_shift(intensity,xoff,yoff)
+;          irp0 = intensity*0.03 ; for testing only
+;          xoff = 0.0 & yoff = 0.0 ; for testing only
+         
+         mpi_image_offset,irp0,intensity,xoff,yoff,silent=silent
+         irp0 = mpi_image_shift(irp0,xoff,yoff)
+  
          if not keyword_set(silent) then begin
             print,' CLR x offset = ',xoff
             print,' CLR y offset = ',yoff
@@ -789,21 +967,56 @@ if p eq 2 then begin
          marginx = abs(xoff)
          marginy = abs(yoff)      
       endif
-         
-      ip = intensity + 2.*(irp0 - intensity*t10)/(t10 - t20)
+
+;      ip0 = intensity + 2.*(irp0 - intensity*t10)/(t10 - t20) ; old formula
+;      
+;      for tesing purpposes only:
+;       xarray = [0.999997, 0.99999, 0.751827, 0.751405, 0.425854, 0.425370, 4.09890e-06, 2.30557e-06]
+;       irp0 = intensity*(0.11/0.4)
+
+;     6/2019 update by R. West:      
+      IRP90 = (IRP0*(T290-T190) + intensity*(T10*T190 - T20*T290))/(T10-T20)
+      x = 0.0 ; replace with cos^2(sunaz) if you want Ip.  Otherwise you get q.
+      numerator = -IRP90*T10 + IRP0*T190 - IRP90*T20 + IRP0*T290
+      denom = (T10*T190 - T20*T290)*(-1 + 2*x)
+      ip = numerator/denom
+
+;     for testing purposes only:
+;      ip = -(((intensity > 1.e-03)*(t10 + t20)-2*(irp0 > 1.e-03)))/((1.-2.*x)*(t10 - t20))
+;      x2 = 1-x
+;      ip2 = -(((intensity > 1.e-03)*(t10 + t20)-2*(irp0 > 1.e-03)))/((1.-2.*x2)*(t10 - t20))
+;      if min(ip) lt 0.0 then stop
          
    endelse
 
 ; stokes parameter Q:
-;   q = ((irp90 - irp0)/(irp90 + irp0))*((t_parallel + t_perp)/(t_parallel - t_perp))
-;   q = (irp90 - irp0)/(irp90 + irp0)
-   
-   q = make_array(size=size(ip),value=0.0)
-   z0 = where(intensity ne 0.0)
-   q[z0] = -ip[z0]/intensity[z0] > (-1.0) < 1.0
-   
-; Return  I,Q from IR polarizers
 
+   q = make_array(size=size(ip),value=-2.0)
+;   z0 = where(intensity gt 0.01)
+   z0 = where(intensity gt 0.002)
+   q[z0] = (ip[z0])*(t10*(1-2.*x) + t20*(2.*x-1))/(t10-t20)
+   q_over_i = make_array(size=size(q))
+   q_over_i[z0] = q[z0]/intensity[z0] > (-1.0) < 1.0
+
+   if keyword_set(debug) then begin
+;   plot,intensity,q_over_i,psym=1
+      z1 = where(intensity gt 0.01)
+      tot = mean(q_over_i[z1])
+      iu = intensity-ip
+      iutot = mean(iu[z1])
+      iptot = mean(ip[z1])
+      avgq = tot
+      BTOT = IUTOT*(t10+t20)/2 + iptot*(t10*x + T20*(1-x))
+      atot = mean(intensity[z1])
+      ip_over_a_tot = (2.*btot/atot-(t10+t20))/((t10-t20)*(2.*x-1))
+      p_from_q = avgq*(t10-t20)/(t10*(1-2.*x) + t20*(2.*x-1))
+      print, btot/atot, Iptot/atot , iutot/atot, iptot/atot, ip_over_a_tot, tot, avgq
+      stop
+   endif
+   
+; Return  I, Q/I from IR polarizers
+
+   q = q_over_i
    s = size(q)
    outstruct = {intensity:fltarr(s[2],s[2]),q:fltarr(s[2],s[2])}
       
@@ -828,8 +1041,6 @@ endif else begin
       return,-1
    endif
       
-;   data3 = read_vicar(file3,label3)
- 
    ImgObj3 = OBJ_NEW('CassImg')
    ImgObj3->ReadVic, file3
    data3 = ImgObj3->Image()
@@ -904,16 +1115,7 @@ endif else begin
 ; transmissions for P0, P60, P120
    case filter of
       
-;      'CL2': begin
-;         t_parallel  =       0.568240
-;         t_perp  =      0.0255870
-;      end
-      
       'GRN': begin
-;         t_parallel  =       0.614877
-;         t_perp  =     0.00303217
-;;                    cal_factor = 3.444 ; West derived
-;         cal_factor = 3.43011   ; Salmon derived
          T1 = 0.648 & T2 = 0.037 & delta_t = 0.026
          TL0 =  0.675 & TR0 = 0.063
          TL60 = 0.646 & TR60 =  0.045
@@ -921,55 +1123,36 @@ endif else begin
       end
       
       'UV3': begin
- ;        t_perp  =       0.0186761
- ;        t_parallel  =       0.471171
-;;                    cal_factor = 5.12245 ; West result
-;         cal_factor = 5.13161   ; Salmon result
          T1 = 0.54  & T2 = 0.087 & delta_t = 0.043
-         TL0 =  0.582 & TR0 = 0.130
+         TL0 =  0.578 & TR0 = 0.130
          TL60 =  0.538 & TR60 =  0.095
          TL120 =  0.527 & TR120 = 0.093
       end
       
       'BL2': begin
- ;        t_parallel  =       0.560820
- ;        t_perp  =     0.00518267
          T1 = 0.602 & T2 = 0.046 & delta_t = 0.03
-         TL0 =  0.632 & TR0 = 0.076
-         TL60 = 0.598 & TR60 =  0.056
-         TL120 =  0.584 & TR120 = 0.057
+         TL0 =  0.627 & TR0 = 0.076
+         TL60 = 0.600 & TR60 =  0.056
+         TL120 =  0.580 & TR120 = 0.055
       end
       
       'MT2': begin
- ;        t_parallel  =       0.762722
- ;        t_perp  =      0.0544492
- ;        cal_factor = 2.60783
          T1 = 0.793 & T2 = 0.085 & delta_t = 0.051
-;         TL0 = 0.845 & TR0 = 0.136
-;         TL60 =  0.824 & TR60 =  0.055
-;         TL120 =  0.810 & TR120 = 0.069
          TL0 = 0.817 & TR0 = 0.163
-         TL60 = 0.794 & TR60 = 0.085
+         TL60 = 0.784 & TR60 = 0.095
          TL120 = 0.781 & TR120 = 0.097
       end
       
       'CB2': begin
- ;        t_parallel  =       0.777493
- ;        t_perp  =      0.0874226
- ;        cal_factor = 2.41770
-         T1 = 0.815 & T2 = 0.125 & delta_t = 0.052
-;         TL0 =  0.866 & TR0 = 0.176
-;         TL60 = 0.841 & TR60 =  0.102
-;         TL120 = 0.841 & TR120 = 0.095
+         T1 = 0.793 & T2 = 0.085 & delta_t = 0.051
          TL0 = 0.841 & TR0 = 0.202
          TL60 = 0.814 & TR60 = 0.129
-         TL120 = 0.813 & TR120 = 0.123
+         TL120 = 0.813 & TR120 = 0.123        
+;         TL0_plus_TR0 = 1.04271
+                  
       end
       
       'MT1': begin
- ;        t_parallel  =       0.640370
- ;        t_perp  =     0.00352720
- ;        cal_factor = 3.13776
          T1 = 0.655 & T2 = 0.018 & delta_t = 0.03
          TL0 =  0.685 & TR0 = 0.049
          TL60 = 0.649 & TR60 =  0.029
@@ -977,9 +1160,6 @@ endif else begin
       end
       
       'CB1': begin
- ;        t_parallel  =       0.635892
- ;        t_perp  =     0.00350794
- ;        cal_factor = 3.2588
          T1 = 0.654  & T2 = 0.022 & delta_t = 0.032
          TL0 =  0.685 & TR0 = 0.053
          TL60 = 0.649 & TR60 =  0.030
@@ -1021,69 +1201,8 @@ endif else begin
 
 ; Calculate Intensity, Polarization, Theta:
 
-; IF NAC (P0, P60, P120):
-;   intensity = (2./(3.*(t_parallel + t_perp)))*(ip0 + image_p60 + ip120)
-
-; Calculate an approximate value of the angle of the polarization
-; assuming the polarizers are oriented at exactly 0, 60 and 120 degrees
-
-  ; term1 = (ip60 + ip120 - 2.*ip0)
-
-   ;term2 = ip60 - ip120
-
-   ;ip = sqrt((term1/(1.5*(t_parallel-t_perp)))^2 + $
-   ;          (term2/(sin(!pi*120./180.)*(t_parallel-t_perp)))^2)
-   
-   ;term2_good = where(abs(term2) ge 1.e-05)
-   ;sign = make_array(size = size(term2), value=1.0)
-   
-   ;sign[term2_good] = term2[term2_good]/abs(term2[term2_good])
-   
-   ;theta = 0.5*sign*(180./!pi)*acos(term1/(1.5*ip*(t_perp-t_parallel)))
-  
-   
-; make correction for true polarizer orientations
-;
-; Here the angle theta should be accurate to 0.015 degree.  Better
-; estimates can be made of polarization and intensity
-
-;   theta0 = -0.5                ; from the calibration report
-;  theta60 = 61.8
-;  theta120 = 120.8
-
    s = size(ip60)
-; the following derived by fitting residuals with program generate_polar_lut.pro
-;   temp =  theta + 0.658*(1. + cos(4*(theta-6.26)*!pi/180.)) + 0.04
-;   theta = temp
-;   z = where(temp gt 90.)
-;   if total(z) gt 0 then theta[z] = theta[z] -180.
-   
    radians = !pi/180.           ; radians per degree
-;   c0 = cos((theta-theta0)*radians)^2
-;   c60 = cos((theta-theta60)*radians)^2
-;   c120 = cos((theta-theta120)*radians)^2
-   
-;   s0 = sin((theta-theta0)*radians)^2
-;   s60 = sin((theta-theta60)*radians)^2
-;   s120 = sin((theta-theta120)*radians)^2
-   
-;   denom1 = t_parallel*(2.*c0-c60-c120) + t_perp*(2.*s0-s60-s120)
-   
-;   denom2 = t_parallel*(c60-c120) + t_perp*(s60-s120)
-   
-;   z1 = where(abs(denom1) ge abs(denom2))
-;   z2 = where(abs(denom2) ge abs(denom1))
- 
-; polarized component
-;   if total(z1) gt 0 then ip[z1] = (2.*ip0[z1] - ip60[z1] -ip120[z1])/denom1[z1]
-;   if total(z2) gt 0 then ip[z2] = (ip60[z2]-ip120[z2])/denom2[z2]
-
-; unpolarized component
-;   iu = (2./(3.*(T_parallel + t_perp)))*((ip0 + ip60 + ip120) -$
-;        ip*(t_parallel*(c0 + c60 + c120) + t_perp*(s0 + s60 + s120)))
-   
-;   intensity = ip +  iu
-;   polarization = ip/intensity  ; range is 0.0 to 1.0
 
    mpi_calc_ipt,Ip0,Ip60,Ip120,T1,T2,delta_t,Intensity,Polarization,Theta
    if min(finite(intensity)) eq 0 or min(finite(polarization)) eq 0 or $ 

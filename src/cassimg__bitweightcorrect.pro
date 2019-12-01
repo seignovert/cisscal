@@ -73,36 +73,42 @@ ELSE FName = FName + 'p25'
 FName = BitWeightDir + FName + '_bwt.tab'
 IF DebugFlag eq 2 THEN CISSCAL_Log, '  Looking for bit-weight correction file: ' + FName
 
-GET_LUN, BWTFile
-OPENR, BWTFile, FName, ERROR=err
+;GET_LUN, BWTFile
+OPENR, BWTFile, FName, ERROR=err, /get_lun
 IF ( err NE 0 ) THEN BEGIN
-  IF DebugFlag gt 0 THEN CISSCAL_Log, '  No bit-weight calibration file found'
-  Weights = FINDGEN(4096)	; Could use this identity map, but unnecessary
+   IF DebugFlag gt 0 THEN CISSCAL_Log, '  No bit-weight calibration file found. Skipping...'
 ENDIF ELSE BEGIN
-  Weights = FLTARR(4096)
-
-  while not eof(BWTFile) do begin
-    text=''
-    readf, BWTFile, text
-    if strpos(text, '\begindata') ge 0 then break
-  endwhile
-
-  READF,BWTFile,Weights
-  CLOSE,BWTFile
+   weights = fltarr(4096)
+   data = -1.0
+   text=''
+   index = 0
+  
+   while not eof(BWTFile) do begin
+      readf, BWTFile, text
+      if strpos(text, '\begindata') ge 0 then break
+   endwhile
+   
+   while not eof(BWTFile) do begin
+      readf, BWTFile, data
+      weights[index] = data
+      index++
+   endwhile
+  
+   CLOSE,BWTFile
+   FREE_LUN, BWTFile
 
 ;	Use current DNs as indices, constraining them to 0..4095
-  Indices = ( *self.ImageP > 0 ) < 4095
-  *self.ImageP = Weights[Indices]
+   Indices = ( *self.ImageP > 0 ) < 4095
+   *self.ImageP = Weights[Indices]
 
 ;	Update calibration history in image label:
 ;		(added by Ben Knowles, 4/02)
 ;               (revamped for CISSCAL 3.7, 4/13)
 
-junk=self.Labels->Set('UNEVEN_BIT_WEIGHT_CORRECTION_FLAG',1,0,/new)
-
-  IF DebugFlag eq 2 THEN CISSCAL_Log, '  DN extrema ', self->DNRange()
+   junk=self.Labels->Set('UNEVEN_BIT_WEIGHT_CORRECTION_FLAG',1,0,/new)
+   
+   IF DebugFlag eq 2 THEN CISSCAL_Log, '  DN extrema ', self->DNRange()
 ENDELSE
-FREE_LUN, BWTFile
 
 END
 

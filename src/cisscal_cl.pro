@@ -42,7 +42,8 @@
 ; bias: BSM or OC or IM or OFF
 ;     im_threshold: (auto = 0.0)
 ;     im_pixrange: (default = 9.0)
-; flux: I or IOF or OFF
+; flux: I or IOF or OFF (Note: latter turns off absolute correction as
+;       well, returns image DNs)
 ; /geom (turns on geometric correction)
 ; spec: text variable set to spectrum file for IOF mode 
 ; mask: text variable set to mask file for image mean 2hz noise

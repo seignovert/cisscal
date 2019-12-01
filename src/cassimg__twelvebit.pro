@@ -17,8 +17,6 @@ PRO CassImg::TwelveBit
 ;			(In this case, we also reconvert the bias vector)
 ;	'8LSB'		Image was truncated to 8LSB: no conversion required
 
-IF self.ConvType EQ 'TABLE' THEN *self.ImageP = cisscal_delut(*self.ImageP)
-
 IF DebugFlag gt 0 THEN BEGIN    
    CISSCAL_Log, '12-bit conversion:'
     IF self.ConvType EQ '12BIT' THEN BEGIN
@@ -32,11 +30,18 @@ IF DebugFlag gt 0 THEN BEGIN
     ENDELSE
 ENDIF
 
+
+IF self.ConvType EQ 'TABLE' THEN BEGIN
+   *self.ImageP = cisscal_delut(*self.ImageP)
+
+
 ;	Update calibration history in image label:
 ;		(added by Ben Knowles, 11/04)
 ;               (revamped for CISSCAL 3.7, 5/13)
 
-newhistory='Converted from 8 to 12 bits'
-junk=self.Labels->Set('DATA_CONVERSION_TEXT',newhistory,1,/new)
+   newhistory='Converted from 8 to 12 bits'
+   junk=self.Labels->Set('DATA_CONVERSION_TEXT',newhistory,1,/new)
 
+ENDIF
+   
 END

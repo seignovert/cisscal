@@ -61,10 +61,18 @@ endif else begin
             return
         endif
             
-        If DebugFlag gt 0 then CISSCAL_Log, '  Using BIAS_STRIP_MEAN instead...'
+        If DebugFlag gt 0 then CISSCAL_Log, '    Using BIAS_STRIP_MEAN instead...'
         biasstrip = 1
     endif else begin
-        biasstrip = 0
+       if self.convtype eq 'TABLE' and self.gainstate lt 3 then begin
+          If DebugFlag gt 0 then begin
+             CISSCAL_Log,'  Table-encoded image with gain state < 3;'
+             CISSCAL_Log,'    Using BIAS_STRIP_MEAN to remove bias and skipping 2 Hz removal...'
+          ENDIF
+          biasstrip = 1
+       endif else begin
+          biasstrip = 0
+       endelse
     endelse
 endelse
 

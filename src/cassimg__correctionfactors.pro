@@ -78,7 +78,9 @@ PRO CassImg::CorrectionFactors
 
 newhistory='Divided by absolute correction factor of '+CorrFact
 
-oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex)
+if self.Labels->Have('RADIOMETRIC_CORRECTION_TEXT') then begin
+
+   oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex)
 
 ; if keyword found and is the SECOND to last one set, we know it was set by
 ; current CISSCAL process, so append new history:
@@ -90,8 +92,11 @@ oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex)
   ; Use of the new function CassLabels::Get_NLabels() solves this problem.
 
 ;if rindex eq (self.Labels).NLabels-2 then begin                ; old
-if rindex eq self.Labels->Get_NLabels()-2 then begin            ; new
-   junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',oldhistory + '; ' + newhistory,1)
+   if rindex eq self.Labels->Get_NLabels()-2 then begin ; new
+      junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',oldhistory + '; ' + newhistory,1)
+   endif else begin
+      junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',newhistory,1,/new)
+   endelse
 endif else begin
    junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',newhistory,1,/new)
 endelse

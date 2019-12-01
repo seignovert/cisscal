@@ -10,7 +10,7 @@ dark subtraction (Y or N)                   : Y
   dark file (overrides model)               : 
   remove hot pixels (Y or N)                : Y
 anti-blooming pixel pair removal            : Y
-abpp threshold (default = 30.0)             : 30.0
+  abpp threshold (default = 30.0)           : 30.0
 linearize (Y or N)                          : Y
 flatfield (Y or N)                          : Y
 flux conversion (Y or N)                    : Y

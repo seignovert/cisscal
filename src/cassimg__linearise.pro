@@ -74,7 +74,6 @@ Instrument = (self.Labels->Get('INSTRUMENT_ID'))[0]
 TblToUse = 0
 
 IF DebugFlag gt 0 THEN BEGIN
-;   CISSCAL_Log
    CISSCAL_Log, 'Correcting for nonlinearity...'
 ENDIF
 
@@ -105,8 +104,6 @@ ENDIF
   IF DebugFlag eq 2 THEN BEGIN
      CISSCAL_Log, '  Table in use:', TblToUse
   ENDIF
-
-
 
 ;	Easiest way is probably to construct a lookup table so only
 ;	need to interpolate once for each DN (integer) value

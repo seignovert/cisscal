@@ -31,11 +31,11 @@ PRO CassImg::SensVsTime
   ENDIF
 
   if self.Instrument eq 'ISSNA' and imgnum lt imgnum_s03 then begin
-     IF DebugFlag gt 0 THEN CISSCAL_Log,' No NAC correction before S03; skipped'
+     IF DebugFlag gt 0 THEN CISSCAL_Log,'  No NAC correction before S03; skipped'
      return
   endif
   if self.Instrument eq 'ISSWA' and imgnum lt imgnum_s17 then begin
-     IF DebugFlag gt 0 THEN CISSCAL_Log,' No WAC correction before S17; skipped'
+     IF DebugFlag gt 0 THEN CISSCAL_Log,'  No WAC correction before S17; skipped'
      return
   endif
  
@@ -47,21 +47,16 @@ PRO CassImg::SensVsTime
 
    *self.ImageP = *self.ImageP * senscorr
 
+  ; note: abs. correction always run before sens. vs. time correction,
+  ; so always append keyword as follows:
+
+   oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',/quiet)
    newhistory='Multiplied by sensitivity vs. time correction of '+strtrim(string(senscorr),2)
 
-   oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex)
-
-; if keyword found and is the SECOND to last one set, we know it was set by
-; current CISSCAL process, so append new history:
-
-   if rindex eq self.Labels->Get_NLabels()-2 then begin ; new
-      junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',oldhistory + '; ' + newhistory,1)
-   endif else begin
-      junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',newhistory,1,/new)
-   endelse
-
+   junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',oldhistory + '; ' + newhistory,1)
+   
    IF DebugFlag gt 0 then begin
-      CISSCAL_Log,' ',newhistory
+      CISSCAL_Log,'  ',newhistory
    ENDIF
    
 end

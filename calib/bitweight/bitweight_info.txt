@@ -1,7 +1,7 @@
 PDS_VERSION_ID         = PDS3
 RECORD_TYPE            = STREAM
 OBJECT                 = TEXT
-  PUBLICATION_DATE     = 2004-12-07
+  PUBLICATION_DATE     = 2019-05-03
   INTERCHANGE_FORMAT   = ASCII
   NOTE                 = "Description of bitweight directory contents."
 END_OBJECT             = TEXT
@@ -14,8 +14,8 @@ These files contain the bitweight corrections as a function of camera,
 temperature (-10, +5, +25) and gain state, as derived during ground
 calibration.
 
-The following files are not real, but are copied from the files with the 
-same gain states, but at different temperatures.
+The following files were copied from the files with the same gain states,
+but at different temperatures.
 
 nacg1p5_bwt.tab
 nacg3p5_bwt.tab

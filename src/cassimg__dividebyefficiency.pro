@@ -19,7 +19,11 @@ IF self.ShutStateID EQ 'DISABLED' THEN BEGIN
       CISSCAL_Log,'Shutter disabled. Skipping efficiency correction...'
    RETURN
 ENDIF
-  
+
+IF DebugFlag gt 0 THEN BEGIN
+   CISSCAL_Log, 'Dividing by Quantum and Optical/Filter Efficiency:'
+ENDIF
+
 units = 'UNK'
 
 Filter1 = self.Filter1
@@ -106,6 +110,7 @@ if (*(*(*CalOptions).flux).ioverf).onoff then begin
             dfs = dfs_val
         endelse
 
+        dfs = dfs[0]
         if dfs le 0 then RETURN 
         
         units = 'I/F'
@@ -183,7 +188,9 @@ IF DebugFlag eq 2 THEN CISSCAL_Log, '  Pixel flux extrema ', self->DNRange()
 
 newhistory='Divided by efficiency factor of '+strtrim(string(Effic),2)
 
-oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex,/quiet)
+if self.Labels->Have('RADIOMETRIC_CORRECTION_TEXT') then begin
+
+   oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex,/quiet)
 
 ; if keyword found and is the last one set, we know it was set by
 ; current CISSCAL process, so append new history:
@@ -195,8 +202,11 @@ oldhistory = self.Labels->Get('RADIOMETRIC_CORRECTION_TEXT',index=rindex,/quiet)
   ; Use of the new function CassLabels::Get_NLabels() solves this problem.
 
 ;if rindex eq (self.Labels).NLabels-1 then begin                ; old
-if rindex eq (self.Labels)->Get_NLabels()-1 then begin          ; new
-   junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',oldhistory + '; ' + newhistory,1)
+   if rindex eq (self.Labels)->Get_NLabels()-1 then begin       ; new
+      junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',oldhistory + '; ' + newhistory,1)
+   endif else begin
+      junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',newhistory,1,/new)
+   endelse
 endif else begin
    junk=self.Labels->Set('RADIOMETRIC_CORRECTION_TEXT',newhistory,1,/new)
 endelse
@@ -204,11 +214,11 @@ endelse
 junk=self.Labels->Set('UNITS',units,1,/new)
 
 IF DebugFlag gt 0 then begin
-   CISSCAL_Log,' ',newhistory
+   CISSCAL_Log,'  ',newhistory
    if units eq 'NORM' then $
       newflag = ' Flux normalized to user-input spectrum' else $
          newflag = 'Units in '+units
-   CISSCAL_Log,' ',newflag
+   CISSCAL_Log,'  ',newflag
 ENDIF
 
 END

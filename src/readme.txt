@@ -1,22 +1,20 @@
---------------
-CISSCAL README
---------------
+------------------
+CISSCAL 4.0 README
+------------------
 
 CISSCAL is the Cassini ISS image calibration software package. For more
 information, including detailed setup instructions, please see Section 4.4
 of the ISS Data User's Guide, available in the document/ directory of the
-ISS Calibration Volume (COISS_0011 version 4.1) or at the following URL:
+ISS Calibration Volume (COISS_0011 version 4.2) or at the following URL:
 
-http://pds-imaging.jpl.nasa.gov/documentation/ISS_Data_User_Guide_180916.pdf
+https://pds-imaging.jpl.nasa.gov/documentation/iss_data_user_guide_180916.pdf
 
 Additionally, see make_polar_image_readme.txt for information regarding 
 polarization calibration using the standalone code make_polar_image.pro. 
 
 Note that when downloaded from the PDS, the CISSCAL software will be found in
 the extras/cisscal/ directory, and the calibration support files will be
-found in the calib/ directory. The user may wish to rename these to
-cisscal3_9_1 and support3_9, respectively, to maintain version control, but
-this is not strictly necessary. 
+found in the calib/ directory.
 
 CISSCAL is written in Interactive Data Language (IDL), and must be run on a
 computer on which IDL has been installed. As of this writing, CISSCAL has 
@@ -25,10 +23,10 @@ the following system variables must be set (typically in user's .cshrc file
 or equivalent) for CISSCAL to work properly:
 
 - CisscalDir, directory containing CISSCAL code, e.g.
-   setenv CisscalDir /home/username/cisscal3_9_1
+   setenv CisscalDir /home/username/cisscal
 
 - CalibrationBaseDir, directory containing calibration support files, e.g.
-   setenv CalibrationBaseDir /home/username/support3_9
+   setenv CalibrationBaseDir /home/username/calib
 
 - ImageBaseDir, default image directory, e.g.
    setenv ImageBaseDir /home/username/images
@@ -44,20 +42,31 @@ Robert West of JPL. The systems design for the CISSCAL software, and its
 original implementation and development, was the work of Dr. Kevin Beurle at
 Queen Mary, University of London from August 1998 through March 2002.
 Beginning in April 2002, major design and algorithmic modifications, software
-additions, debugging and maintenance have been performed by Benjamin Knowles
-of CICLOPS/Space Science Institute, Boulder, CO under the direct supervision
-of West.  Significant contributions (algorithms, software, evaluation and
+additions, debugging and maintenance have been performed by Ben Knowles of
+CICLOPS/Space Science Institute, Boulder, CO under the direct supervision of
+West.  Significant contributions (algorithms, software, evaluation and
 validation, etc.) have been made by West, Vance Haemmerle of JPL (while at
 CICLOPS), Daren Wilson of CICLOPS, and other members of the Cassini ISS Team.
 
 Direct all questions to Ben Knowles at Space Science Institute, Boulder, CO 
 (ben.cisscal@gmail.com).
 
--Ben Knowles, 8/8/2018
+-Ben Knowles, 7/7/2019
 
 
-Change Log:
------------
+Version history:
+----------------
+
+New in version 4.0:
+
+. Improved logic in option file reader and cisscal_cl.pro
+. Changed formatting of bitweight files to ease parsing
+. Added logic to handle bias/2-hz noise removal for TABLE images of various gain
+  states
+. Improved CISSCAL_Log formatting
+. Updates to polarized filter algorithm in make_polar_image.pro (see
+  make_polar_image_readme.txt).
+
 
 New in version 3.9.1:
 
