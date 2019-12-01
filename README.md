@@ -42,12 +42,12 @@ or equivalent) for CISSCAL to work properly:
 
 - `CisscalDir`, directory containing CISSCAL code:
 ```
-setenv CisscalDir /home/username/cisscal3_9_1
+setenv CisscalDir /home/username/cisscal
 ```
 
 - `CalibrationBaseDir`, directory containing calibration support files:
 ```
-setenv CalibrationBaseDir /home/username/support3_9
+setenv CalibrationBaseDir /home/username/calib
 ```
 
 - `ImageBaseDir`, default image directory:
